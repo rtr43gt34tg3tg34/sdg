@@ -1,5 +1,5 @@
 -- ruin.lol UI Library
--- Converts your static UI into a dynamic library
+-- EXACT same UI structure as your code, but made into a library
 
 local ruin = {}
 ruin.__index = ruin
@@ -8,460 +8,453 @@ ruin.__index = ruin
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
--- Colors
-local Colors = {
-    Background = Color3.fromRGB(11, 11, 10),
-    TabActive = Color3.fromRGB(11, 11, 10),
-    TabInactive = Color3.fromRGB(30, 31, 29),
-    Border = Color3.fromRGB(55, 55, 62),
-    Text = Color3.fromRGB(194, 194, 194),
-    ToggleOn = Color3.fromRGB(108, 107, 146),
-    ToggleOff = Color3.fromRGB(30, 30, 31),
-    Section = Color3.fromRGB(21, 21, 20),
-    Button = Color3.fromRGB(34, 34, 34)
-}
+-- This creates the EXACT UI from your code
+local function createExactUI()
+    -- Gui to Lua
+    -- Version: 3.2
 
--- Main function to create UI
+    -- Instances:
+    local ensol = Instance.new("ScreenGui")
+    local Frame = Instance.new("Frame")
+    local MainUI = Instance.new("Frame")
+    local Header = Instance.new("TextLabel")
+    local Frame_9 = Instance.new("Frame")
+    
+    -- Properties:
+    ensol.Name = "ruin.lol"
+    ensol.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    ensol.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    Frame.Parent = ensol
+    Frame.BackgroundColor3 = Color3.fromRGB(11, 11, 10)
+    Frame.BorderColor3 = Color3.fromRGB(55, 55, 62)
+    Frame.Position = UDim2.new(0.107611559, 0, 0.101758793, 0)
+    Frame.Size = UDim2.new(0, 469, 0, 611)
+
+    MainUI.Name = "MainUI"
+    MainUI.Parent = Frame
+    MainUI.BackgroundColor3 = Color3.fromRGB(11, 11, 10)
+    MainUI.BorderColor3 = Color3.fromRGB(55, 55, 62)
+    MainUI.Position = UDim2.new(0.0116626602, 0, 0.0395656638, 0)
+    MainUI.Size = UDim2.new(0, 458, 0, 580)
+
+    Header.Name = "Header"
+    Header.Parent = MainUI
+    Header.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Header.BackgroundTransparency = 1.000
+    Header.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Header.BorderSizePixel = 0
+    Header.Position = UDim2.new(0, 0, -0.0606624223, 0)
+    Header.Size = UDim2.new(0, 200, 0, 35)
+    Header.Font = Enum.Font.SourceSans
+    Header.Text = "ruin.lol"
+    Header.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Header.TextSize = 14.000
+
+    Frame_9.Parent = Frame
+    Frame_9.BackgroundColor3 = Color3.fromRGB(108, 109, 122)
+    Frame_9.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Frame_9.BorderSizePixel = 0
+    Frame_9.Position = UDim2.new(0.0120000001, 0, 0.0299999993, 0)
+    Frame_9.Size = UDim2.new(0.763326228, 100, -0.00200000009, 0)
+    
+    -- Make draggable
+    local function ZLTWDPZ_fake_script()
+        local frame = Frame
+        local UserInputService = game:GetService("UserInputService")
+        
+        local dragging = false
+        local dragInput = nil
+        local dragStart = nil
+        local startPos = nil
+        
+        local function update(input)
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+        end
+        
+        frame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = frame.Position
+        
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+        
+        frame.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+        
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                update(input)
+            end
+        end)
+    end
+    coroutine.wrap(ZLTWDPZ_fake_script)()
+    
+    return {
+        ScreenGui = ensol,
+        MainFrame = Frame,
+        MainUI = MainUI,
+        Header = Header,
+        Tabs = {},
+        ContentFrames = {},
+        CurrentTab = nil
+    }
+end
+
+-- Create new UI instance
 function ruin.new(config)
     config = config or {}
     
     local self = setmetatable({}, ruin)
     
-    -- Store UI data
-    self.Tabs = {}
-    self.Elements = {}
-    self.Toggles = {}
-    self.CurrentTab = nil
+    -- Create the exact UI
+    self.ui = createExactUI()
     
-    -- Configuration
-    self.Config = {
+    -- Store configuration
+    self.config = {
         Name = config.Name or "ruin.lol",
-        Position = config.Position or UDim2.new(0.1, 0, 0.1, 0),
-        Size = config.Size or UDim2.new(0, 469, 0, 611),
         Keybind = config.Keybind or Enum.KeyCode.RightControl,
         Visible = config.Visible ~= false
     }
     
-    -- Create the base UI
-    self:CreateBaseUI()
+    -- Update header text
+    self.ui.Header.Text = self.config.Name
     
     -- Setup keybind
-    if self.Config.Keybind then
-        self:SetupKeybind()
+    if self.config.Keybind then
+        self:setupKeybind()
     end
+    
+    -- Content area (where tabs show)
+    self.ui.ContentArea = Instance.new("Frame")
+    self.ui.ContentArea.Name = "ContentArea"
+    self.ui.ContentArea.BackgroundTransparency = 1
+    self.ui.ContentArea.Position = UDim2.new(0, 0, 0.0414, 0)
+    self.ui.ContentArea.Size = UDim2.new(1, 0, 1, -24)
+    self.ui.ContentArea.Parent = self.ui.MainUI
+    
+    -- Tabs container
+    self.ui.TabsContainer = Instance.new("Frame")
+    self.ui.TabsContainer.Name = "TabsContainer"
+    self.ui.TabsContainer.BackgroundTransparency = 1
+    self.ui.TabsContainer.Size = UDim2.new(1, 0, 0, 24)
+    self.ui.TabsContainer.Parent = self.ui.MainUI
     
     return self
 end
 
--- Create the base UI structure
-function ruin:CreateBaseUI()
-    -- ScreenGui
-    self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "ruin.lol"
-    self.ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-    self.ScreenGui.ResetOnSpawn = false
-    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    -- Main Frame
-    self.MainFrame = Instance.new("Frame")
-    self.MainFrame.Name = "Frame"
-    self.MainFrame.BackgroundColor3 = Colors.Background
-    self.MainFrame.BorderColor3 = Colors.Border
-    self.MainFrame.Position = self.Config.Position
-    self.MainFrame.Size = self.Config.Size
-    self.MainFrame.Parent = self.ScreenGui
-    
-    -- Make draggable
-    self:MakeDraggable(self.MainFrame)
-    
-    -- Main UI Container
-    self.MainUI = Instance.new("Frame")
-    self.MainUI.Name = "MainUI"
-    self.MainUI.BackgroundColor3 = Colors.Background
-    self.MainUI.BorderColor3 = Colors.Border
-    self.MainUI.Position = UDim2.new(0.0117, 0, 0.0396, 0)
-    self.MainUI.Size = UDim2.new(0, self.Config.Size.X.Offset - 11, 0, self.Config.Size.Y.Offset - 31)
-    self.MainUI.Parent = self.MainFrame
-    
-    -- Header
-    self.Header = Instance.new("TextLabel")
-    self.Header.Name = "Header"
-    self.Header.BackgroundTransparency = 1
-    self.Header.Position = UDim2.new(0, 0, -0.0607, 0)
-    self.Header.Size = UDim2.new(0, 200, 0, 35)
-    self.Header.Font = Enum.Font.SourceSans
-    self.Header.Text = self.Config.Name
-    self.Header.TextColor3 = Color3.fromRGB(220, 220, 220)
-    self.Header.TextSize = 14
-    self.Header.TextXAlignment = Enum.TextXAlignment.Left
-    self.Header.Parent = self.MainUI
-    
-    -- Tabs Container
-    self.TabsContainer = Instance.new("Frame")
-    self.TabsContainer.Name = "TabsContainer"
-    self.TabsContainer.BackgroundTransparency = 1
-    self.TabsContainer.Size = UDim2.new(1, 0, 0, 24)
-    self.TabsContainer.Parent = self.MainUI
-    
-    -- Content Area
-    self.ContentArea = Instance.new("Frame")
-    self.ContentArea.Name = "ContentArea"
-    self.ContentArea.BackgroundTransparency = 1
-    self.ContentArea.Position = UDim2.new(0, 0, 0.0414, 0)
-    self.ContentArea.Size = UDim2.new(1, 0, 1, -24)
-    self.ContentArea.Parent = self.MainUI
-    
-    -- Separator
-    local Separator = Instance.new("Frame")
-    Separator.BackgroundColor3 = Color3.fromRGB(108, 109, 122)
-    Separator.BorderSizePixel = 0
-    Separator.Position = UDim2.new(0.012, 0, 0.03, 0)
-    Separator.Size = UDim2.new(0.763, 100, 0.002, 0)
-    Separator.Parent = self.MainFrame
-end
-
--- Make frame draggable
-function ruin:MakeDraggable(frame)
-    local dragging = false
-    local dragInput, startPos, startDragPos
-    
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            startDragPos = input.Position
-            startPos = frame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input == dragInput then
-            local delta = input.Position - startDragPos
-            frame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
--- Setup keybind to toggle UI
-function ruin:SetupKeybind()
+-- Setup keybind
+function ruin:setupKeybind()
     UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == self.Config.Keybind then
+        if input.KeyCode == self.config.Keybind then
             self:Toggle()
         end
     end)
 end
 
--- Add a tab
+-- Add a tab (EXACT same style as your tabs)
 function ruin:Tab(name)
-    -- Create tab button
-    local TabButton = Instance.new("TextButton")
-    TabButton.Name = name .. "Tab"
-    TabButton.BackgroundColor3 = Colors.TabInactive
-    TabButton.BorderSizePixel = 0
-    TabButton.Size = UDim2.new(0, 90, 0, 24)
-    TabButton.Font = Enum.Font.SourceSans
-    TabButton.Text = name
-    TabButton.TextColor3 = Colors.Text
-    TabButton.TextSize = 14
+    -- Create tab button (same as your MainTab, ESPTab, etc.)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Name = name .. "Tab"
+    tabButton.BackgroundColor3 = Color3.fromRGB(30, 31, 29)
+    tabButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    tabButton.BorderSizePixel = 0
+    tabButton.Size = UDim2.new(0, 90, 0, 24)
+    tabButton.Font = Enum.Font.SourceSans
+    tabButton.Text = name
+    tabButton.TextColor3 = Color3.fromRGB(194, 194, 194)
+    tabButton.TextSize = 14.000
     
-    -- Position tab
+    -- Position it (same spacing as your tabs)
     local xPos = 0
-    for _, tab in pairs(self.Tabs) do
-        xPos = xPos + 90
+    for _, tab in pairs(self.ui.Tabs) do
+        xPos = xPos + tab.Button.Size.X.Offset
     end
-    TabButton.Position = UDim2.new(0, xPos, 0, 0)
-    TabButton.Parent = self.TabsContainer
+    tabButton.Position = UDim2.new(0, xPos, 0, 0)
+    tabButton.Parent = self.ui.TabsContainer
     
-    -- Create tab content frame
-    local ContentFrame = Instance.new("Frame")
-    ContentFrame.Name = name .. "Frame"
-    ContentFrame.BackgroundTransparency = 1
-    ContentFrame.Size = UDim2.new(1, 0, 1, 0)
-    ContentFrame.Visible = false
-    ContentFrame.Parent = self.ContentArea
+    -- Create content frame (same as your ConfigsFrame/EspFrame)
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = name .. "Frame"
+    contentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    contentFrame.BackgroundTransparency = 1.000
+    contentFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    contentFrame.BorderSizePixel = 0
+    contentFrame.Position = UDim2.new(0, 0, 0.0413793102, 0)
+    contentFrame.Size = UDim2.new(0, 458, 0, 556)
+    contentFrame.Visible = false
+    contentFrame.Parent = self.ui.ContentArea
     
     -- Tab data
-    local TabData = {
+    local tabData = {
         Name = name,
-        Button = TabButton,
-        Frame = ContentFrame,
+        Button = tabButton,
+        Frame = contentFrame,
         Elements = {}
     }
     
-    table.insert(self.Tabs, TabData)
+    table.insert(self.ui.Tabs, tabData)
     
-    -- Tab click event
-    TabButton.MouseButton1Click:Connect(function()
+    -- Tab switching logic (same as your script)
+    tabButton.MouseButton1Click:Connect(function()
         self:SwitchTab(name)
     end)
     
     -- Set first tab as active
-    if #self.Tabs == 1 then
+    if #self.ui.Tabs == 1 then
         self:SwitchTab(name)
     end
     
-    return TabData
+    return tabData
 end
 
--- Switch to a specific tab
+-- Switch tab (same as your AHFTX_fake_script)
 function ruin:SwitchTab(tabName)
+    local ACTIVE_COLOR = Color3.fromRGB(11, 11, 10)
+    local INACTIVE_COLOR = Color3.fromRGB(30, 31, 29)
+    
     -- Hide all tabs
-    for _, tab in pairs(self.Tabs) do
+    for _, tab in ipairs(self.ui.Tabs) do
         tab.Frame.Visible = false
-        tab.Button.BackgroundColor3 = Colors.TabInactive
+        tab.Button.BackgroundColor3 = INACTIVE_COLOR
     end
     
     -- Show selected tab
-    for _, tab in pairs(self.Tabs) do
+    for _, tab in ipairs(self.ui.Tabs) do
         if tab.Name == tabName then
             tab.Frame.Visible = true
-            tab.Button.BackgroundColor3 = Colors.TabActive
-            self.CurrentTab = tab
+            tab.Button.BackgroundColor3 = ACTIVE_COLOR
+            self.ui.CurrentTab = tab
             break
         end
     end
 end
 
--- Add a section
+-- Add a section (same as your ExtrasFrame)
 function ruin:Section(config)
-    if not self.CurrentTab then
+    if not self.ui.CurrentTab then
         warn("Create a tab first!")
         return nil
     end
     
     config = config or {}
     
-    local SectionFrame = Instance.new("Frame")
-    SectionFrame.Name = "Section"
-    SectionFrame.BackgroundColor3 = Colors.Section
-    SectionFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-    SectionFrame.Position = config.position or UDim2.new(0.015, 0, 0.02, 0)
-    SectionFrame.Size = config.size or UDim2.new(0.475, 0, 0.3, 0)
-    SectionFrame.Parent = self.CurrentTab.Frame
+    -- Create section frame (same as your ExtrasFrame)
+    local sectionFrame = Instance.new("Frame")
+    sectionFrame.Name = "Section"
+    sectionFrame.BackgroundColor3 = Color3.fromRGB(21, 21, 20)
+    sectionFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    sectionFrame.Position = config.position or UDim2.new(0.0152838426, 0, 0.019784173, 0)
+    sectionFrame.Size = config.size or UDim2.new(0, 217, 0, 100)
+    sectionFrame.Parent = self.ui.CurrentTab.Frame
     
     -- Add title if provided
     if config.text then
-        local Title = Instance.new("TextLabel")
-        Title.Text = config.text
-        Title.TextColor3 = Colors.Text
-        Title.BackgroundTransparency = 1
-        Title.Size = UDim2.new(1, 0, 0, 25)
-        Title.Font = Enum.Font.SourceSans
-        Title.TextSize = 14
-        Title.TextXAlignment = Enum.TextXAlignment.Center
-        Title.Parent = SectionFrame
+        local title = Instance.new("TextLabel")
+        title.Name = "Title"
+        title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        title.BackgroundTransparency = 1.000
+        title.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        title.BorderSizePixel = 0
+        title.Position = UDim2.new(-0.202764973, 0, 0.159999996, 0)
+        title.Size = UDim2.new(0, 186, 0, 29)
+        title.Font = Enum.Font.SourceSans
+        title.Text = config.text
+        title.TextColor3 = Color3.fromRGB(178, 178, 178)
+        title.TextSize = 14.000
+        title.Parent = sectionFrame
     end
     
-    return SectionFrame
+    return sectionFrame
 end
 
--- Add a toggle (like your TypeWrite buttons)
+-- Add a toggle (same as your TypeWrite buttons)
 function ruin:Toggle(config)
-    if not config then
-        warn("Toggle requires a configuration table")
-        return nil
-    end
-    
-    if not self.CurrentTab then
+    if not self.ui.CurrentTab then
         warn("Create a tab first!")
         return nil
     end
     
-    local parent = config.parent or self.CurrentTab.Frame
+    local parent = config.parent or self.ui.CurrentTab.Frame
     local name = config.text or config.name or "Toggle"
     local state = config.state or false
     local callback = config.callback or function() end
     
-    -- Create toggle button (like TypeWrite)
-    local ToggleButton = Instance.new("TextButton")
-    ToggleButton.Name = name .. "Toggle"
-    ToggleButton.BackgroundColor3 = state and Colors.ToggleOn or Colors.ToggleOff
-    ToggleButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-    ToggleButton.Position = config.position or UDim2.new(0.078, 0, #self.Elements * 0.07, 0)
-    ToggleButton.Size = config.size or UDim2.new(0, -9, 0, -9)
-    ToggleButton.AutoButtonColor = false
-    ToggleButton.Text = ""
-    ToggleButton.Parent = parent
+    -- Create toggle button (SAME as your TypeWrite)
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = name .. "Toggle"
+    toggleButton.BackgroundColor3 = state and Color3.fromRGB(108, 107, 146) or Color3.fromRGB(30, 30, 31)
+    toggleButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    toggleButton.Position = config.position or UDim2.new(0.0783410147, 0, #self.ui.CurrentTab.Elements * 0.1, 0)
+    toggleButton.Size = config.size or UDim2.new(0, -9, 0, -9)
+    toggleButton.AutoButtonColor = false
+    toggleButton.Text = ""
+    toggleButton.Parent = parent
     
-    -- Create label (like your TextLabel)
-    local Label = Instance.new("TextLabel")
-    Label.Text = name
-    Label.TextColor3 = Colors.Text
-    Label.BackgroundTransparency = 1
-    Label.Position = UDim2.new(-0.2, 0, #self.Elements * 0.07 + 0.16, 0)
-    Label.Size = UDim2.new(0, 186, 0, 29)
-    Label.Font = Enum.Font.SourceSans
-    Label.TextSize = 14
-    Label.Parent = parent
+    -- Create label (SAME as your TextLabel)
+    local label = Instance.new("TextLabel")
+    label.Name = name .. "Label"
+    label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1.000
+    label.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    label.BorderSizePixel = 0
+    label.Position = UDim2.new(-0.202764973, 0, #self.ui.CurrentTab.Elements * 0.1 + 0.16, 0)
+    label.Size = UDim2.new(0, 186, 0, 29)
+    label.Font = Enum.Font.SourceSans
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(178, 178, 178)
+    label.TextSize = 14.000
+    label.Parent = parent
     
     -- Toggle data
-    local ToggleData = {
+    local toggleData = {
         Name = name,
         State = state,
-        Button = ToggleButton,
-        Label = Label,
+        Button = toggleButton,
+        Label = label,
         Callback = callback
     }
     
-    -- Toggle click
-    ToggleButton.MouseButton1Click:Connect(function()
-        ToggleData.State = not ToggleData.State
-        ToggleButton.BackgroundColor3 = ToggleData.State and Colors.ToggleOn or Colors.ToggleOff
-        callback(ToggleData.State)
+    -- Toggle click (SAME as your WJBHKF_fake_script)
+    toggleButton.MouseButton1Click:Connect(function()
+        toggleData.State = not toggleData.State
+        if toggleData.State then
+            toggleButton.BackgroundColor3 = Color3.fromRGB(108, 107, 146)
+        else
+            toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 31)
+        end
+        callback(toggleData.State)
     end)
     
-    table.insert(self.Elements, ToggleButton)
-    table.insert(self.Toggles, ToggleData)
-    
-    return ToggleData
+    table.insert(self.ui.CurrentTab.Elements, toggleButton)
+    return toggleData
 end
 
--- Add a button (like your TextButton)
+-- Add a button (same as your TextButton)
 function ruin:Button(config)
-    if not self.CurrentTab then
+    if not self.ui.CurrentTab then
         warn("Create a tab first!")
         return nil
     end
     
-    local parent = config.parent or self.CurrentTab.Frame
+    local parent = config.parent or self.ui.CurrentTab.Frame
     
-    local Button = Instance.new("TextButton")
-    Button.Name = config.text or "Button"
-    Button.Text = config.text or "Button"
-    Button.TextColor3 = Colors.Text
-    Button.BackgroundColor3 = Colors.Button
-    Button.BorderSizePixel = 0
-    Button.Size = config.size or UDim2.new(0, 200, 0, 18)
-    Button.Position = config.position or UDim2.new(0.041, 0, #self.Elements * 0.07, 0)
-    Button.Font = Enum.Font.SourceSans
-    Button.TextSize = 14
-    Button.Parent = parent
+    local button = Instance.new("TextButton")
+    button.Name = config.text or "Button"
+    button.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+    button.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    button.Position = config.position or UDim2.new(0.0412844047, 0, #self.ui.CurrentTab.Elements * 0.07, 0)
+    button.Size = config.size or UDim2.new(0, 200, 0, 18)
+    button.Font = Enum.Font.SourceSans
+    button.Text = config.text or "Button"
+    button.TextColor3 = Color3.fromRGB(178, 178, 178)
+    button.TextSize = 14.000
+    button.Parent = parent
     
     if config.callback then
-        Button.MouseButton1Click:Connect(config.callback)
+        button.MouseButton1Click:Connect(config.callback)
     end
     
-    table.insert(self.Elements, Button)
-    return Button
+    table.insert(self.ui.CurrentTab.Elements, button)
+    return button
 end
 
--- Add a textbox (like your TextBox)
+-- Add a textbox (same as your TextBox)
 function ruin:Textbox(config)
-    if not self.CurrentTab then
+    if not self.ui.CurrentTab then
         warn("Create a tab first!")
         return nil
     end
     
-    local parent = config.parent or self.CurrentTab.Frame
+    local parent = config.parent or self.ui.CurrentTab.Frame
     
-    local Textbox = Instance.new("TextBox")
-    Textbox.Name = config.text or "Textbox"
-    Textbox.PlaceholderText = config.placeholder or ""
-    Textbox.Text = config.default or ""
-    Textbox.TextColor3 = Colors.Text
-    Textbox.BackgroundColor3 = Colors.Button
-    Textbox.BorderSizePixel = 0
-    Textbox.Size = config.size or UDim2.new(0, 200, 0, 17)
-    Textbox.Position = config.position or UDim2.new(0.041, 0, #self.Elements * 0.07, 0)
-    Textbox.Font = Enum.Font.SourceSans
-    Textbox.TextSize = 14
-    Textbox.Parent = parent
+    local textbox = Instance.new("TextBox")
+    textbox.Name = config.text or "Textbox"
+    textbox.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+    textbox.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    textbox.Position = config.position or UDim2.new(0.0412844047, 0, #self.ui.CurrentTab.Elements * 0.07, 0)
+    textbox.Size = config.size or UDim2.new(0, 200, 0, 17)
+    textbox.Font = Enum.Font.SourceSans
+    textbox.PlaceholderColor3 = Color3.fromRGB(178, 178, 178)
+    textbox.PlaceholderText = config.placeholder or ""
+    textbox.Text = config.default or ""
+    textbox.TextColor3 = Color3.fromRGB(178, 178, 178)
+    textbox.TextSize = 14.000
+    textbox.Parent = parent
     
     if config.callback then
-        Textbox.FocusLost:Connect(function()
-            config.callback(Textbox.Text)
+        textbox.FocusLost:Connect(function()
+            config.callback(textbox.Text)
         end)
     end
     
-    table.insert(self.Elements, Textbox)
-    return Textbox
+    table.insert(self.ui.CurrentTab.Elements, textbox)
+    return textbox
 end
 
 -- Add a label
 function ruin:Label(config)
-    if not self.CurrentTab then
+    if not self.ui.CurrentTab then
         warn("Create a tab first!")
         return nil
     end
     
-    local parent = config.parent or self.CurrentTab.Frame
+    local parent = config.parent or self.ui.CurrentTab.Frame
     
-    local Label = Instance.new("TextLabel")
-    Label.Text = config.text or "Label"
-    Label.TextColor3 = Colors.Text
-    Label.BackgroundTransparency = 1
-    Label.Size = config.size or UDim2.new(0, 186, 0, 29)
-    Label.Position = config.position or UDim2.new(-0.2, 0, #self.Elements * 0.07, 0)
-    Label.Font = Enum.Font.SourceSans
-    Label.TextSize = 14
-    Label.Parent = parent
+    local label = Instance.new("TextLabel")
+    label.Name = config.text or "Label"
+    label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1.000
+    label.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    label.BorderSizePixel = 0
+    label.Position = config.position or UDim2.new(-0.202764973, 0, #self.ui.CurrentTab.Elements * 0.07, 0)
+    label.Size = config.size or UDim2.new(0, 186, 0, 29)
+    label.Font = Enum.Font.SourceSans
+    label.Text = config.text or "Label"
+    label.TextColor3 = Color3.fromRGB(178, 178, 178)
+    label.TextSize = 14.000
+    label.Parent = parent
     
-    table.insert(self.Elements, Label)
-    return Label
+    table.insert(self.ui.CurrentTab.Elements, label)
+    return label
 end
 
 -- Toggle UI visibility
 function ruin:Toggle()
-    self.MainFrame.Visible = not self.MainFrame.Visible
+    self.ui.MainFrame.Visible = not self.ui.MainFrame.Visible
 end
 
 -- Show UI
 function ruin:Show()
-    self.MainFrame.Visible = true
+    self.ui.MainFrame.Visible = true
 end
 
 -- Hide UI
 function ruin:Hide()
-    self.MainFrame.Visible = false
+    self.ui.MainFrame.Visible = false
 end
 
 -- Destroy UI
 function ruin:Destroy()
-    self.ScreenGui:Destroy()
-    self.Tabs = {}
-    self.Elements = {}
-    self.Toggles = {}
-end
-
--- Get toggle state
-function ruin:GetState(name)
-    for _, toggle in pairs(self.Toggles) do
-        if toggle.Name == name then
-            return toggle.State
-        end
-    end
-    return nil
-end
-
--- Set toggle state
-function ruin:SetState(name, state)
-    for _, toggle in pairs(self.Toggles) do
-        if toggle.Name == name then
-            toggle.State = state
-            toggle.Button.BackgroundColor3 = state and Colors.ToggleOn or Colors.ToggleOff
-            if toggle.Callback then
-                toggle.Callback(state)
-            end
-            return true
-        end
-    end
-    return false
+    self.ui.ScreenGui:Destroy()
+    self.ui = nil
 end
 
 return ruin
